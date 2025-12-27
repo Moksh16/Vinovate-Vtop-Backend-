@@ -1,0 +1,71 @@
+from .db import Base
+from sqlalchemy import Column, Integer, String,Boolean,DateTime
+from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.sqltypes import TIMESTAMP
+from enum import Enum
+
+class Users(Base):
+    __tablename__ = "Users"
+    id = Column(Integer, primary_key=True)
+    role = Column(Enum("Student","Parent","Faculty","Admin",name="Role_enum"))
+    username = Column(String, unique=True,nullable=False)
+    password_hash = Column(String, nullable=False)
+
+
+class Subject(Base):
+    __tablename__ = "Subjects"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String,nullable=False)
+    credits = Column(Integer,nullable=False)
+    slot = Column(Enum("A1+TA1", "B1/TB1", "C1/TC1", "D1/TD1", "E1/TE1","F1/TF1","G1/TG1", name="slot_enum"))
+
+
+class Student(Base):
+    __tablename__ = "Student"
+
+    registration_number = Column(String, primary_key=True)
+    name = Column(String,nullable=False)
+    parent_id = Column(String,nullable=False)
+
+
+class Faculty(Base):
+    __tablename__ = "Faculty"
+
+    registration_number = Column(String, primary_key=True)
+    name = Column(String,nullable=False)
+    department = Column(String, nullable=False)
+
+
+class Parent(Base):
+    __tablename__ = "Parent"
+    name = Column(String, nullable=False)
+    id = Column(Integer,primary_key=True, nullable=False)
+
+
+class Faculty_subject(Base):
+    __tablename__ = "faculty_subjects"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String,Nullable=False)
+    Subject = Column(String,nullable=False)
+
+
+
+class Marks(Base):
+    __tablename__ = "marks"
+
+    id = Column(Integer, primary_key=True)
+    subject = Column(Integer, nullable=False)
+    marks = Column(Integer, nullable=False)
+    grade = Column(String, nullable=True)
+
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    id = Column(Integer, primary_key=True)
+    date = Column(DateTime, nullable=False)
+    subect = Column(DateTime)
+    present = Column(Boolean, nullable=False)
+    
