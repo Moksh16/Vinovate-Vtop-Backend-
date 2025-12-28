@@ -32,67 +32,67 @@ class user(BaseModel):
     password: str
     role: str
 
-subjects = [
-
-    {
-        "math":{
-            "teachers": [
-                {"name": "animesh", "slot":"A2"},
-                {"name":"Abdul Haq", "slot":"A1"}
-                ],
-                "credits": 5
-            }   
-        }
-        ]
 
 
 
-#backend for students
+class SelectSubjectRequest(BaseModel):
+    subject_id: int
 
-marks_and_grade = [{'Physics':
-                    {"marks":35,"grades":'A'}
-                    }]
-subject_info = {}
-attendance={"Physics":"80%", "Chemistry":"55%"}
-total_credits=0
+
 @app.get('/marks')
 def see_marks_grade():
-    return marks_and_grade
+    cursor.execute("""select * from marks""")
+    marks = cursor.fetchall()
+    return {"Your marks ": marks}
 
+
+
+@app.post("/select-subject-ffcs")
+def ffcs_selection(request: SelectSubjectRequest):
+    cursor.execute("""SELECT subject, credits, slot, faculty_name FROM FFCS WHERE id = %s""",(request.subject_id,))
+    subject = cursor.fetchone()
+    # to check the subject is in the original ffcs list or not
+    if not subject:
+        raise HTTPException(status_code=404, detail="Subject not found")
     
-def max_credits(max,credits):
-    total_credits += credits
-    if total_credits>max:
-        total_credits-= credits
-        return False
-    else:
-        return True
+    subject,credits,slot,faculty_name = subject
 
-@app.post('/ffcs')
-def add_slot(subject_name, teacher_name, slot):
+    # to check whether we have already selected that subject or not
+    cursor.execute("""select from FFCS where subject = %s""",(subject,))
 
-    for subject in subjects:
+    if cursor.fetchnone():
+        raise HTTPException(status_code=404, detail = "You already have that subject in your list")
+    
+    # to dheck we already have selected that slot or not
+    cursor.execute("""SELECT 1 FROM "Selected_slots" WHERE slot = %s""",(slot,))
 
-        if subject_name in subject:
+    if cursor.fetchone():
+        raise HTTPException(status_code=400, detail="Slot already occupied")
+    
+    # to check our credits are fulfilled or not
+    cursor.execute("""SELECT SUM(credits) FROM "Selected_slots" """)
+    total_credits = cursor.fetchone()[0]
 
-            teachers = subject[subject_name]["teachers"]
+    if total_credits + credits > 27:
+        raise HTTPException(status_code=400, detail="Credit limit exceeded")
+    total_credits +=credits
+    
 
-            for teacher in teachers:
+    # it all conditions are satisfied, additing the required subject into our selected list
+    cursor.execute("""INSERT INTO "Selected_slots" (subject,credits, slot, faculty_name) VALUES (%s, %s, %s, %s)""",
+        (subject,int(credits), slot, faculty_name))
+    conn.commit()
 
-                if teacher["name"] == teacher_name and teacher["slot"] == slot:
-
-                    
-                    credit= subject[subject_name]['credits']
-                    credit_outcome =max_credits(27,credit)
-                    if credit_outcome==False:
-                        return {"Credit limit reached"}
-                    subject.append({"Subject": subject_name,"Professor":teacher_name})
-
-                    return {"Course Successfully added"}
-                else:
-
-                    return {"Your slots are clashing, try with some other slot"}
+    return {
+        "message": "selected successfully",
+        "subject": subject,
+        "slot": slot,
+        "faculty_name": faculty_name,
+        "total_credits": total_credits
+    }
                 
 @app.get('/attendance')
 def see_attendance():
-    return attendance
+    cursor.execute("""select * from attendance""")
+    attendance = cursor.fetchall()
+    return {"Your attendance: ": attendance}
