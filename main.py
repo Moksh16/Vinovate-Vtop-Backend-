@@ -46,21 +46,23 @@ def see_marks_grade():
     return {"Your marks ": marks}
 
 
-
 @app.post("/select-subject-ffcs")
 def ffcs_selection(request: SelectSubjectRequest):
-    cursor.execute("""SELECT subject, credits, slot, faculty_name FROM FFCS WHERE id = %s""",(request.subject_id,))
-    subject = cursor.fetchone()
+    cursor.execute("""SELECT subject, credits, slot, faculty_name FROM "FFCS" WHERE id = %s""",(request.subject_id,))
+    subject_row = cursor.fetchone()
     # to check the subject is in the original ffcs list or not
-    if not subject:
+    if not subject_row:
         raise HTTPException(status_code=404, detail="Subject not found")
     
-    subject,credits,slot,faculty_name = subject
+    subject = subject_row["subject"]
+    credits = subject_row["credits"]
+    slot = subject_row["slot"]
+    faculty_name = subject_row["faculty_name"]
 
     # to check whether we have already selected that subject or not
-    cursor.execute("""select from FFCS where subject = %s""",(subject,))
+    cursor.execute("""select * from "Selected_slots" where subject = %s""",(subject,))
 
-    if cursor.fetchnone():
+    if cursor.fetchone():
         raise HTTPException(status_code=404, detail = "You already have that subject in your list")
     
     # to dheck we already have selected that slot or not
@@ -70,8 +72,15 @@ def ffcs_selection(request: SelectSubjectRequest):
         raise HTTPException(status_code=400, detail="Slot already occupied")
     
     # to check our credits are fulfilled or not
-    cursor.execute("""SELECT SUM(credits) FROM "Selected_slots" """)
-    total_credits = cursor.fetchone()[0]
+    # to check our credits are fulfilled or not
+    cursor.execute(
+    """SELECT COALESCE(SUM(credits), 0) AS total_credits
+       FROM "Selected_slots";"""
+)
+
+    row = cursor.fetchone()
+    total_credits = row["total_credits"]
+
 
     if total_credits + credits > 27:
         raise HTTPException(status_code=400, detail="Credit limit exceeded")
@@ -96,3 +105,15 @@ def see_attendance():
     cursor.execute("""select * from attendance""")
     attendance = cursor.fetchall()
     return {"Your attendance: ": attendance}
+
+@app.get('/selected-slots')
+def slots_selected():
+    cursor.execute("""select * from "Selected_slots" """)
+    slots = cursor.fetchall()
+    cursor.execute(
+    """SELECT COALESCE(SUM(credits), 0) AS total_credits
+       FROM "Selected_slots";"""
+)
+    row = cursor.fetchone()
+    total_credits = row["total_credits"]
+    return{"your slots": slots}, {"totalCredits": total_credits}

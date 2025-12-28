@@ -21,7 +21,7 @@ class FFCS(Base):
     id = Column(Integer, primary_key=True)
     subject = Column(String,nullable=False)
     credits = Column(Integer,nullable=False)
-    slot = Column(Enum("A1+TA1", "B1/TB1", "C1/TC1", "D1/TD1", "E1/TE1","F1/TF1","G1/TG1", name="slot_enum"),nullable=False)
+    slot = Column(Enum("A1+TA1", "B1+TB1", "C1+TC1", "D1+TD1", "E1+TE1","F1+TF1","G1+TG1", name="slot_enum"),nullable=False)
     faculty_name = Column(String, nullable=False)
 
 class Student(Base):
@@ -88,4 +88,4 @@ class selected_slots(Base):
     subject = Column(String, nullable=False,unique=True)
     faculty_name = Column(String,nullable=False,unique=True)
     credits = Column(Integer,nullable=False)
-    slot = Column(Enum("A1+TA1", "B1/TB1", "C1/TC1", "D1/TD1", "E1/TE1","F1/TF1","G1/TG1", name="slot_enum"),unique=True)
+    slot = Column(Enum("A1+TA1", "B1+TB1", "C1+TC1", "D1+TD1", "E1+TE1","F1+TF1","G1+TG1", name="slot_enum"),unique=True)
