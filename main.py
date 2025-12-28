@@ -5,9 +5,12 @@ from typing import Optional
 from random import randrange
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 import time
 from sqlalchemy.orm import Session
-
+from passlib.context import CryptContext
+oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="Login")
+password_hasher = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 

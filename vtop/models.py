@@ -1,5 +1,5 @@
 from .db import Base
-from sqlalchemy import Column, Integer, String,Boolean,DateTime
+from sqlalchemy import Column, Integer, String,Boolean,DateTime,ForeignKey
 from sqlalchemy.sql.expression import text
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from enum import Enum
@@ -41,6 +41,7 @@ class Parent(Base):
     __tablename__ = "Parent"
     name = Column(String, nullable=False)
     id = Column(Integer,primary_key=True, nullable=False)
+    child_id = Column(String,ForeignKey("Student.registration_number"),nullable=False)
 
 
 class Faculty_subject(Base):
@@ -49,6 +50,7 @@ class Faculty_subject(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String,Nullable=False)
     Subject = Column(String,nullable=False)
+
 
 
 
@@ -69,3 +71,9 @@ class Attendance(Base):
     subect = Column(DateTime)
     present = Column(Boolean, nullable=False)
     
+class reval(Base):
+    __tablename__ = "attendance"
+    id = Column(Integer, primary_key=True)
+    student_regno = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    enrollment_status = Column(Enum("PENDING", "APPROVED", "REJECTED", name="reeval_status_enum"), default="PENDING")
