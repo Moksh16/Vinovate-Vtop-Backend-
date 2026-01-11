@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Response, status, HTTPException, Depends
+from fastapi import FastAPI, Response, status, HTTPException, Depends, APIRouter
 from fastapi.params import Body
 from pydantic import BaseModel
 from sqlalchemy import func
@@ -7,30 +7,26 @@ from random import randrange
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from passlib.context import CryptContext
-from . import models
-from .db import get_db  # assuming you have a get_db dependency
+from . import models,user,db
+from .db import get_db  
+
+models.Base.metadata.create_all(bind=db.engine)
+
 oauth_2_scheme = OAuth2PasswordBearer(tokenUrl="Login")
 password_hasher = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+from . import schemas
 app = FastAPI()
+router = APIRouter()
+app.include(user.router)
 
-class user(BaseModel):
-    name: str
-    password: str
-    role: str
-
-class SelectSubjectRequest(BaseModel):
-    subject_id: int
-
-
-@app.get('/marks')
+@router.get('/marks')
 def see_marks_grade(db: Session = Depends(get_db)):
     marks = db.query(models.Marks).all()
     return {"Your marks ": marks}
 
 
-@app.post("/select-subject-ffcs")
-def ffcs_selection(request: SelectSubjectRequest, db: Session = Depends(get_db)):
+@router.post("/select-subject-ffcs")
+def ffcs_selection(request: schemas.SelectSubjectRequest, db: Session = Depends(get_db)):
     subject_row = db.query(models.FFCS).filter(models.FFCS.id == request.subject_id).first()
 
     if not subject_row:
@@ -78,13 +74,13 @@ def ffcs_selection(request: SelectSubjectRequest, db: Session = Depends(get_db))
     }
 
 
-@app.get('/attendance')
+@router.get('/attendance')
 def see_attendance(db: Session = Depends(get_db)):
     attendance = db.query(models.Attendance).all()
     return {"Your attendance: ": attendance}
 
 
-@app.get('/selected-slots')
+@router.get('/selected-slots')
 def slots_selected(db: Session = Depends(get_db)):
     slots = db.query(models.selected_slots).all()
     total_credits = db.query(models.selected_slots).with_entities(

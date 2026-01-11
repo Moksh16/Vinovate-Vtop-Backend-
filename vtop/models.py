@@ -11,6 +11,7 @@ class Users(Base):
         Enum("Student", "Parent", "Faculty", "Admin", name="role_enum"),
         nullable=False
     )
+    email = Column(String, unique=True, nullable=False)
     username = Column(String, unique=True,nullable=False)
     password_hash = Column(String, nullable=False)
 
